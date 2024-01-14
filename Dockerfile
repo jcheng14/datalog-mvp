@@ -58,7 +58,7 @@ RUN wget --quiet --show-progress --progress=bar:force:noscroll --no-check-certif
 COPY . .
 
 # Install the Flir Camera SDK
-RUN cd spinnaker-3.0.0.118-amd64 && \
+RUN cd spinnaker-3.1.0.79-amd64 && \
     echo 'libspinnaker libspinnaker/accepted-flir-eula boolean true'| debconf-set-selections && \
     dpkg -i libgentl_*.deb && \
     dpkg -i libspinnaker_*.deb && \
@@ -77,8 +77,8 @@ RUN cd spinnaker-3.0.0.118-amd64 && \
     dpkg -i spinnaker-doc_*.deb
 
 # Install Python Wrapper for Flir Camera SDK 
-RUN cd spinnaker_python-3.0.0.118-cp38-cp38-linux_x86_64 && \
-    python3 -m pip install spinnaker_python-3.0.0.118-cp38-cp38-linux_x86_64.whl \
+RUN cd spinnaker_python-3.1.0.79-cp38-cp38-linux_x86_64 && \
+    python3 -m pip install spinnaker_python-3.1.0.79-cp38-cp38-linux_x86_64.whl \
     keyboard 
 
 RUN python3 -m pip install opencv-python \
