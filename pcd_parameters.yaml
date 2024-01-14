@@ -1,0 +1,68 @@
+# Voxel Size for downsampling 
+DOWNSAMPLE_VOXEL_SIZE: 0.01   #0.05 # 0.003
+
+
+# Thresholds to crop the VOI of logs on the test bed
+BACKGROUND_DEPTH_THRESHOLD : 20000 # In millimetres - the HAP measurements are in mm)
+BACKGROUND_HEIGHT_THRESHOLD : -3200 # this number has to be across "y" with values in mm
+GROUND_THRESHOLD : 0.7500
+
+
+# Thresholds to crop the threshold for potentilal calibrated figures
+CROPPED_UPPER_THRESHOLD : 0.4572
+CROPPED_LOWER_THRESHOLD : 0.5000
+
+
+# KD-Tree Search Params
+KD_RADIUS : 0.01
+KD_NEIGHBORS : 30
+STANCHION_BASE_KD_RADIUS : 0.1
+
+
+# Outlier Removal Parameters
+OUTLIER_NUM_NEIGHBORS : 50
+OUTLIER_STD_RATIO : 1.0
+
+
+# Angle thresholds for Validating Planes
+VALID_PLANE_X_MIN : 20
+VALID_PLANE_X_MAX : 150
+VALID_PLANE_Z_MIN : 60
+VALID_PLANE_Z_MAX : 105
+
+
+# Plane Segmentation Parameters
+
+# Stanchion Base Plane Parameters
+StanchionBasePlaneSegmentationParams: 
+  - normal_variance_threshold_deg: 30
+  - coplanarity_deg: 75
+  - outlier_ratio: 0.15
+  - min_plane_edge_length: 0.1
+  - min_num_points: 50
+  - knn_num: 30
+
+# Stanchion Pole Plane Parameters
+StanchionPolePlaneSegmentationParams:
+  - normal_variance_threshold_deg: 30
+  - coplanarity_deg: 75
+  - outlier_ratio: 0.15
+  - min_plane_edge_length: 0.05
+  - min_num_points: 10
+  - knn_num: 30
+
+# Log Plane Parameters
+LogPlaneSegmentationParams:
+  - normal_variance_threshold_deg: 60  # 60 #parameters worked before statistical outlier removal
+  - coplanarity_deg: 75  # 65
+  - outlier_ratio: 0.75  # 0.35
+  - min_plane_edge_length: 0  # 0.175
+  - min_num_points: 0  # 0
+  - knn_num: 30  # 10
+
+
+# PCD stitching parameters
+# Coarse: Voxel size* high number 
+# Fine: Voxel size* low number
+max_correspondence_distance_coarse: 0.15
+max_correspondence_distance_fine: 0.015
