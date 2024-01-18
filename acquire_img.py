@@ -12,8 +12,15 @@ NUM_IMAGES = 1 # Number of Continuous image to capture
 CAMERA_FRAME_TIME = 2000 # Milli-Seconds
 PATH_CAMERA_RAW_DATA = os.getcwd() + "/CameraRawData/Camera-raw-first-fieldtest"
 PATH_CAMERA_CALIBRATION_DATA = os.getcwd() + "/CameraRawData/CalibrationData"
+BASE_PATH = os.getcwd() + "/CameraRawData"
 
-def acquire_images(cam, nodemap, nodemap_tldevice, args):
+def create_folder(truck_id):
+    folder_path = os.path.join(BASE_PATH, f"Truck_{truck_id}")
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    return folder_path
+
+def acquire_images(cam, cam_ip, nodemap, nodemap_tldevice, folder_path, args):
     """
     This function acquires and saves 10 images from a device.
 
@@ -85,7 +92,7 @@ def acquire_images(cam, nodemap, nodemap_tldevice, args):
             return False
 
 
-        given_ip_address = int(socket.inet_aton(args.ip_address).hex(), 16)
+        given_ip_address = int(socket.inet_aton(cam_ip).hex(), 16)
         print("Given IP %d" % given_ip_address)
         if device_ip_address == given_ip_address: 
             print("Camera IP matches with given IP")
@@ -108,9 +115,11 @@ def acquire_images(cam, nodemap, nodemap_tldevice, args):
                             filename = PATH_CAMERA_CALIBRATION_DATA + '/img-%s-%s-%d.jpg' % (str(date.today()), \
                                                             str(datetime.now().strftime("%H:%M:%S")), args.focal_length)
                         else:  # if serial number is empty
-                            filename = PATH_CAMERA_RAW_DATA + '/img-%d-%s-%s-%d.jpg' % ( args.load_type, str(args.load_end), str(args.ip_address[-3:]),args.stop)
+                            # filename = PATH_CAMERA_RAW_DATA + '/img-%d-%s-%s-%d.jpg' % ( args.load_type, str(args.load_end), str(args.ip_address[-3:]),args.stop)
+                            filename = f"{folder_path}/img-{args.front_or_end}-{args.L_or_R}-{str(cam_ip[-3:])}-{i}.png"
+
                         image_data = image_result.GetNDArray()
-                        # print("IMage data array shape", image_data.shape)
+                        print("IMage data array shape", image_data.shape)
                         # print("IMage data from camera", image_data)
                         # Converting BGR to RGB Images
                         acquired_image = Image.fromarray(image_data[...,::-1])
@@ -139,7 +148,7 @@ def acquire_images(cam, nodemap, nodemap_tldevice, args):
     return result
 
 
-def run_single_camera(cam, args):
+def run_single_camera(cam, cam_ip, args):
     """
     This function acts as the body of the example; please see NodeMapInfo example
     for more in-depth comments on setting up cameras.
@@ -164,8 +173,11 @@ def run_single_camera(cam, args):
         # Retrieve GenICam nodemap
         nodemap = cam.GetNodeMap()
 
+        # create a folder for each truck
+        folder_path = create_folder(args.truck_id)
+
         # Acquire images
-        result &= acquire_images(cam, nodemap, nodemap_tldevice, args)
+        result &= acquire_images(cam, cam_ip, nodemap, nodemap_tldevice, folder_path, args)
 
         # Deinitialize camera
         cam.DeInit()
@@ -217,14 +229,16 @@ def main(args):
         # Release system instance
         system.ReleaseInstance()
         print('Not enough cameras!')
-        input('Done! Press Enter to exit...')
+        # input('Done! Press Enter to exit...')
         return False
 
-    # Run example on each camera
-    for i, cam in enumerate(cam_list):
-        print('Running example for camera %d...' % i)
-        result &= run_single_camera(cam, args)
-        print('Camera %d example complete... \n' % i)
+    cam_ips = args.cam_ips.split(',')
+
+    # Run example on each camera    
+    for cam_ip, cam in zip(cam_ips, cam_list):
+        print('Running capture for camera %s...' % cam_ip)
+        result &= run_single_camera(cam, cam_ip, args)
+        print('Camera %s capture complete... \n' % cam_ip)
 
     # Release reference to camera
     # NOTE: Unlike the C++ examples, we cannot rely on pointer objects being automatically
@@ -237,19 +251,18 @@ def main(args):
 
     # Release system instance
     system.ReleaseInstance()
-    input('Done! Press Enter to exit...')
+    # input('Done! Press Enter to exit...')
     return result
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description="Converts csv files to .pcd files")
-    parser.add_argument("-s", "--stop", type=int, help="distance of camera from log ends")
-    # parser.add_argument("-ver", "--vertical", type=int, help="height of the camera from the ground")
-    parser.add_argument("-cal", "--calibration_images", type=bool, help="Images for Camera Lens Calibration")
-    parser.add_argument("-f", "--focal_length", type=int, help="Focal-length of the lens used")
-    parser.add_argument("-l", "--load_type",type=int, help="load type of the load" )
-    parser.add_argument("-le", "--load_end", type=str, help="starting alphabet of the load")
-    parser.add_argument("-ip", "--ip_address", type=str, help="IP-address of the desired camera")
+    parser = argparse.ArgumentParser(description="Capture images from multiple cameras")
+    parser.add_argument("--calibration_images", type=str)
+    parser.add_argument("--focal_length", type=str)
+    parser.add_argument("--truck_id", type=str, help="Truck ID")
+    parser.add_argument("--cam_ips", type=str, help="Comma-separated camera IP addresses")
+    parser.add_argument("--front_or_end", type=str, help="Front or end")
+    parser.add_argument("--L_or_R", type=str, help="Left or right")
     args = parser.parse_args()
     if main(args):
         sys.exit(0)
